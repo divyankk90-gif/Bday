@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Royal Birthday Experience | Special Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --p: #ff1493; --s: #ff69b4; --bg: #050505; 
+            --glow: 0 0 25px rgba(255, 20, 147, 0.5); 
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Poppins', sans-serif; overflow-x: hidden; min-height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 1500px; }
+        #canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+
+        /* BUILDER SECTION (For You) */
+        .creator-form {
+            width: 90%; max-width: 500px; padding: 35px;
+            background: var(--glass); backdrop-filter: blur(25px);
+            border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center; box-shadow: var(--glow); z-index: 10;
+        }
+        .creator-form h2 { font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: var(--p); margin-bottom: 20px; text-shadow: var(--glow); }
+        .input-box { width: 100%; margin-bottom: 12px; text-align: left; }
+        .input-box label { font-size: 0.75rem; color: var(--s); text-transform: uppercase; letter-spacing: 1px; margin-left: 10px; }
+        .input-box input, .input-box textarea {
+            width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
+            border: 1px solid var(--p); border-radius: 12px; color: white;
+            box-sizing: border-box; margin-top: 5px; outline: none; transition: 0.3s;
+        }
+        .input-box input:focus { box-shadow: 0 0 15px rgba(255, 20, 147, 0.3); }
+
+        /* MAGIC SURPRISE CARD (For Priyanka/Partner) */
+        .glass-card {
+            width: 90%; max-width: 450px; padding: 45px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(30px); border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--glow); text-align: center;
+            display: none; transform-style: preserve-3d; transition: all 0.5s ease;
+        }
+
+        h1 { font-family: 'Dancing Script', cursive; font-size: 3rem; color: var(--p); text-shadow: var(--glow); margin: 0; }
+        .comment { font-style: italic; color: var(--s); font-size: 0.85rem; margin-top: 10px; display: block; }
+        p { font-size: 1.1rem; line-height: 1.6; color: #efefef; margin: 25px 0; }
+
+        .btn {
+            background: linear-gradient(45deg, var(--p), var(--s));
+            color: white; padding: 14px 30px; border: none; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.3); margin-top: 10px; width: 100%;
+        }
+        .btn:hover { transform: scale(1.03); box-shadow: 0 8px 25px rgba(255, 20, 147, 0.5); }
+
+        #share-section { margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 15px; display: none; }
+        #share-link { font-size: 0.75rem; word-break: break-all; color: #ccc; margin-bottom: 12px; padding: 10px; border: 1px dashed var(--p); line-height: 1.4; }
+
+        /* FINAL POPUP */
+        #letter-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 85%; max-width: 400px; background: #080808; color: #fff;
+            padding: 35px; border-radius: 30px; border: 2px solid var(--p);
+            box-shadow: 0 0 60px var(--p); z-index: 1000;
+            transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Dancing Script', cursive; font-size: 1.6rem;
+        }
+        #letter-popup.active { transform: translate(-50%, -50%) scale(1); }
+
+        .hidden { display: none; }
+        .heart-particle { position: fixed; pointer-events: none; animation: fall linear forwards; z-index: 99; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+        @keyframes pulse { to { transform: scale(1.2); } }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="creator-form" id="creator">
+        <h2>Special Surprise Builder 🎁</h2>
+        <div class="input-box"><label>Birthday Person Name</label><input type="text" id="targetName" placeholder="e.g. Priyanka"></div>
+        <div class="input-box"><label>Your Nickname (e.g. Akadu)</label><input type="text" id="yourNick" placeholder="e.g. Akadu"></div>
+        <div class="input-box"><label>Your Real Name</label><input type="text" id="yourRealName" placeholder="e.g. Divyank"></div>
+        <div class="input-box"><label>Secret Code (Password)</label><input type="text" id="passCode" placeholder="e.g. princess"></div>
+        <div class="input-box"><label>Personal Birthday Message</label><textarea id="personalMsg" rows="3" placeholder="Write something from your heart..."></textarea></div>
+        
+        <button class="btn" onclick="generateMagicLink()">Create Surprise Link ✨</button>
+        
+        <div id="share-section">
+            <p style="color: var(--s); font-size: 0.9rem;">Copy & send this private link to them:</p>
+            <div id="share-link"></div>
+            <button class="btn" onclick="copyLink()" id="copyBtn">Copy Link to Clipboard 📋</button>
+        </div>
+    </div>
+
+    <div class="glass-card" id="card">
+        <div id="s1">
+            <h1 id="disp-hey">Hey Gorgeous! ❤️</h1>
+            <span class="comment">(Uff! Aaj toh nazar hi nahi hat rahi...)</span>
+            <p>Main jaanta hoon main <b id="disp-nick">Akadu</b> hoon, par aapke liye toh main poora pighal jaata hoon. Taiyar ho meri duniya mein enter karne ke liye?</p>
+            <button class="btn" onclick="go(2)">Let's Go! 😍</button>
+        </div>
+
+        <div id="s2" class="hidden">
+            <h1>Sawal No. 1 😉</h1>
+            <p>Aap itni pyaari kaise ho? Matlab koi itna cute kaise ho sakta hai ki main gussa hoke bhi pighal jaaun?</p>
+            <button class="btn" onclick="go(3)">God Gift hai! ✨</button>
+            <button class="btn" onclick="go(3)">Aapka asar hai! ❤️</button>
+        </div>
+
+        <div id="s3" class="hidden">
+            <h1>Security Access 🔒</h1>
+            <p>Ise unlock karne ke liye humara secret code enter karein:</p>
+            <input type="password" id="passInput" style="width: 85%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--p); border-radius: 12px; color: white; text-align: center; margin-bottom: 15px;" placeholder="Enter Password...">
+            <button class="btn" onclick="checkPass()">Unlock My Heart ✨</button>
+        </div>
+
+        <div id="s4" class="hidden">
+            <h1 id="disp-final">Happy Birthday! 🎉</h1>
+            <span class="comment">"Tu hai to mujhe phir aur kya chahiye..."</span>
+            <p>Meri Princess, hamesha aise hi chamakti rehna. ❤️</p>
+            <div style="font-size:90px; animation: pulse 0.8s infinite alternate; cursor:pointer;" onclick="openLetter()">❤️</div>
+            <p style="font-weight:bold; color:var(--s);">Tap the heart to read my soul</p>
+        </div>
+    </div>
+
+    <div id="letter-popup">
+        <h2 id="l-hi" style="color: var(--p);"></h2>
+        <p id="l-msg"></p>
+        <p><b id="l-from"></b></p>
+        <button class="btn" onclick="closeLetter()" style="width:auto; padding: 8px 25px; font-size: 0.9rem;">Close ❤️</button>
+    </div>
+
+    <script>
+        let userData = {};
+
+        // 1. LINK GENERATOR
+        function generateMagicLink() {
+            const data = {
+                n: document.getElementById('targetName').value,
+                nk: document.getElementById('yourNick').value,
+                r: document.getElementById('yourRealName').value,
+                c: document.getElementById('passCode').value.toLowerCase(),
+                m: document.getElementById('personalMsg').value
+            };
+            if(!data.n || !data.c) return alert("Pehle details bharo!");
+            
+            // Privacy Encoding (Base64)
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+            const url = window.location.origin + window.location.pathname + '?gift=' + encoded;
+            
+            document.getElementById('share-link').innerText = url;
+            document.getElementById('share-section').style.display = 'block';
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(document.getElementById('share-link').innerText);
+            const btn = document.getElementById('copyBtn');
+            btn.innerText = "Link Copied! ✅";
+            setTimeout(() => { btn.innerText = "Copy Link to Clipboard 📋"; }, 2000);
+        }
+
+        // 2. AUTO-LOAD SURPRISE ON LINK OPEN
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const giftData = params.get('gift');
+            
+            if(giftData) {
+                try {
+                    userData = JSON.parse(decodeURIComponent(escape(atob(giftData))));
+                    
+                    // Hide builder, Show Surprise
+                    document.getElementById('creator').style.display = 'none';
+                    document.getElementById('card').style.display = 'block';
+                    
+                    // Inject Content
+                    document.getElementById('disp-hey').innerText = `Hey ${userData.n}! ❤️`;
+                    document.getElementById('disp-nick').innerText = userData.nk;
+                    document.getElementById('disp-final').innerText = `Happy Birthday ${userData.n}! 🎉`;
+                    document.getElementById('l-hi').innerText = `Meri Pyaari ${userData.n},`;
+                    document.getElementById('l-msg').innerText = userData.m;
+                    document.getElementById('l-from').innerText = `Forever Yours, ${userData.r}`;
+                } catch(e) { console.error("Invalid Link Format"); }
+            }
+            initStars();
+        };
+
+        // NAVIGATION & LOGIC
+        function go(s) {
+            document.querySelectorAll('#card > div').forEach(d => d.classList.add('hidden'));
+            document.getElementById('s' + s).classList.remove('hidden');
+        }
+
+        function checkPass() {
+            const input = document.getElementById('passInput').value.toLowerCase();
+            if(input === userData.c) {
+                go(4); startHearts();
+            } else { 
+                alert("Galat Password! Hint: Woh naam jo aap ho (Jo humne set kiya tha)."); 
+            }
+        }
+
+        function openLetter() { document.getElementById('letter-popup').classList.add('active'); }
+        function closeLetter() { document.getElementById('letter-popup').classList.remove('active'); }
+
+        // VISUAL EFFECTS
+        function initStars() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let stars = [];
+            for(let i=0; i<100; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*2});
+            function draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = "white";
+                stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill(); });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function startHearts() {
+            setInterval(() => {
+                const h = document.createElement('div');
+                h.classList.add('heart-particle');
+                h.innerHTML = ['❤️','💖','✨','😘','🎂','🎉'][Math.floor(Math.random()*6)];
+                h.style.left = Math.random() * 100 + 'vw';
+                h.style.top = '-20px';
+                h.style.fontSize = Math.random()*20+15 + 'px';
+                h.style.animation = `fall ${Math.random()*3+2}s linear forwards`;
+                document.body.appendChild(h);
+                setTimeout(() => h.remove(), 4000);
+            }, 100);
+        }
+
+        // 3D TILT EFFECT
+        const card = document.getElementById('card');
+        document.addEventListener('mousemove', (e) => {
+            let x = (window.innerWidth/2 - e.pageX)/20;
+            let y = (window.innerHeight/2 - e.pageY)/20;
+            card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
+    </script>
+</body>
+</html>
